@@ -39,7 +39,10 @@ func init() {
 	analyzeCmd.Flags().StringVar(&outputFormat, "format", "table", "output format (table, json, yaml)")
 	analyzeCmd.Flags().StringVarP(&outputFile, "output", "o", "", "output file (default: stdout)")
 
-	analyzeCmd.MarkFlagRequired("source")
+	if err := analyzeCmd.MarkFlagRequired("source"); err != nil {
+		// This should never fail with a valid flag name
+		panic(fmt.Sprintf("failed to mark source flag as required: %v", err))
+	}
 }
 
 func runAnalyze(cmd *cobra.Command, args []string) error {

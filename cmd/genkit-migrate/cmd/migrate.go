@@ -47,7 +47,10 @@ func init() {
 	migrateCmd.Flags().BoolVar(&dryRun, "dry-run", false, "analyze and plan without making changes")
 	migrateCmd.Flags().BoolVarP(&interactive, "interactive", "i", true, "interactive mode with prompts")
 
-	migrateCmd.MarkFlagRequired("source")
+	if err := migrateCmd.MarkFlagRequired("source"); err != nil {
+		// This should never fail with a valid flag name
+		panic(fmt.Sprintf("failed to mark source flag as required: %v", err))
+	}
 }
 
 func runMigrate(cmd *cobra.Command, args []string) error {
