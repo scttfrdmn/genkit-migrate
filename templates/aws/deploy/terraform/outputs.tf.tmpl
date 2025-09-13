@@ -1,0 +1,19 @@
+output "lambda_function_name" {
+  description = "Name of the Lambda function"
+  value       = aws_lambda_function.genkit_app.function_name
+}
+
+output "lambda_function_arn" {
+  description = "ARN of the Lambda function"
+  value       = aws_lambda_function.genkit_app.arn
+}
+
+output "api_gateway_url" {
+  description = "URL of the API Gateway"
+  value       = aws_apigatewayv2_stage.default_stage.invoke_url
+}
+
+output "cloudwatch_log_group" {
+  description = "CloudWatch log group name"
+  value       = aws_cloudwatch_log_group.genkit_app_logs.name
+}

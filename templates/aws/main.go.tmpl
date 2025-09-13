@@ -1,0 +1,68 @@
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/firebase/genkit/go/genkit"
+	{{- if eq .TargetProvider "aws" }}
+	genkitaws "github.com/scttfrdmn/genkit-aws/pkg/genkit-aws"
+	"github.com/scttfrdmn/genkit-aws/pkg/bedrock"
+	"github.com/scttfrdmn/genkit-aws/pkg/monitoring"
+	{{- end }}
+)
+
+func main() {
+	ctx := context.Background()
+
+	{{- if eq .TargetProvider "aws" }}
+	// Initialize GenKit with AWS plugin
+	err := genkit.Init(ctx, &genkit.Config{
+		Plugins: []genkit.Plugin{
+			genkitaws.New(&genkitaws.Config{
+				Region: "{{.AWS.Region}}",
+				Bedrock: &bedrock.Config{
+					Models: []string{
+						"anthropic.claude-3-sonnet-20240229-v1:0",
+						"amazon.nova-pro-v1:0",
+					},
+				},
+				CloudWatch: &monitoring.Config{
+					Namespace: "GenKit/{{.ProjectName}}",
+					Enabled:   true,
+				},
+			}),
+		},
+	})
+	if err != nil {
+		log.Fatalf("Failed to initialize GenKit: %v", err)
+	}
+	{{- else }}
+	// Initialize GenKit
+	err := genkit.Init(ctx, nil)
+	if err != nil {
+		log.Fatalf("Failed to initialize GenKit: %v", err)
+	}
+	{{- end }}
+
+	// Register your flows here
+	{{- range .Flows }}
+	registerFlow{{.Name}}()
+	{{- end }}
+
+	// Start the GenKit server
+	if err := genkit.Start(ctx); err != nil {
+		log.Fatalf("Failed to start GenKit: %v", err)
+	}
+}
+
+{{- range .Flows }}
+
+func registerFlow{{.Name}}() {
+	genkit.DefineFlow("{{.Name}}", func(ctx context.Context, input interface{}) (interface{}, error) {
+		// TODO: Implement your flow logic here
+		// This is a placeholder for the migrated flow
+		return nil, nil
+	})
+}
+{{- end }}

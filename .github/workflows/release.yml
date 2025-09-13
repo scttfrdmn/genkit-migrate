@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+
+    - name: Get version
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Run tests
+      run: go test -v ./...
+
+    - name: Build binaries
+      run: |
+        VERSION=${{ steps.version.outputs.VERSION }}
+        COMMIT=$(git rev-parse --short HEAD)
+        BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+        
+        LDFLAGS="-X github.com/genkit-migrate/genkit-migrate/cmd/genkit-migrate/cmd.version=$VERSION"
+        LDFLAGS="$LDFLAGS -X github.com/genkit-migrate/genkit-migrate/cmd/genkit-migrate/cmd.commit=$COMMIT"
+        LDFLAGS="$LDFLAGS -X github.com/genkit-migrate/genkit-migrate/cmd/genkit-migrate/cmd.buildTime=$BUILD_TIME"
+        
+        mkdir -p dist
+        
+        # Build for multiple platforms
+        PLATFORMS="darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64"
+        
+        for PLATFORM in $PLATFORMS; do
+          GOOS=${PLATFORM%/*}
+          GOARCH=${PLATFORM#*/}
+          
+          OUTPUT_NAME="genkit-migrate-$VERSION-$GOOS-$GOARCH"
+          if [ "$GOOS" = "windows" ]; then
+            OUTPUT_NAME="$OUTPUT_NAME.exe"
+          fi
+          
+          echo "Building for $GOOS/$GOARCH..."
+          env GOOS=$GOOS GOARCH=$GOARCH go build \
+            -ldflags="$LDFLAGS" \
+            -o "dist/$OUTPUT_NAME" \
+            ./cmd/genkit-migrate
+        done
+
+    - name: Generate checksums
+      run: |
+        cd dist
+        sha256sum * > checksums.txt
+
+    - name: Generate changelog
+      run: |
+        echo "## Changes" > release-notes.md
+        echo "" >> release-notes.md
+        git log --oneline --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release-notes.md || echo "- Initial release" >> release-notes.md
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/*
+        body_path: release-notes.md
+        draft: false
+        prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update Homebrew Formula (on stable release)
+      if: "!contains(steps.version.outputs.VERSION, '-')"
+      run: |
+        echo "TODO: Update Homebrew formula"
+        # This would typically trigger a workflow in a homebrew-tap repository

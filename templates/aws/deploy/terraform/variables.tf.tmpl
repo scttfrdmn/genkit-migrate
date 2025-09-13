@@ -1,0 +1,29 @@
+variable "aws_region" {
+  description = "AWS region for deployment"
+  type        = string
+  default     = "{{.AWS.Region}}"
+}
+
+variable "project_name" {
+  description = "Project name used for resource naming"
+  type        = string
+  default     = "{{.ProjectName}}"
+}
+
+variable "function_name" {
+  description = "Lambda function name"
+  type        = string
+  default     = "{{.ProjectName}}-genkit-app"
+}
+
+variable "environment" {
+  description = "Environment name (dev, staging, prod)"
+  type        = string
+  default     = "production"
+}
+
+variable "log_retention_days" {
+  description = "CloudWatch log retention in days"
+  type        = number
+  default     = 14
+}

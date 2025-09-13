@@ -1,0 +1,13 @@
+module {{.ModuleName}}
+
+go {{.GoVersion}}
+
+require (
+	github.com/firebase/genkit/go v1.0.2
+	{{- if eq .TargetProvider "aws" }}
+	github.com/scttfrdmn/genkit-aws v0.1.0
+	{{- end }}
+	{{- range .Dependencies }}
+	{{.Name}} {{.Version}}
+	{{- end }}
+)

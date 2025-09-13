@@ -1,0 +1,57 @@
+package main
+
+import (
+	"os"
+)
+
+type Config struct {
+	AWS struct {
+		Region  string `yaml:"region"`
+		Profile string `yaml:"profile"`
+	} `yaml:"aws"`
+	Bedrock struct {
+		Models []string `yaml:"models"`
+	} `yaml:"bedrock"`
+	CloudWatch struct {
+		Namespace string `yaml:"namespace"`
+		Enabled   bool   `yaml:"enabled"`
+	} `yaml:"cloudwatch"`
+}
+
+func getConfig() *Config {
+	return &Config{
+		AWS: struct {
+			Region  string `yaml:"region"`
+			Profile string `yaml:"profile"`
+		}{
+			Region:  getEnv("AWS_REGION", "{{.AWS.Region}}"),
+			Profile: getEnv("AWS_PROFILE", "{{.AWS.Profile}}"),
+		},
+		Bedrock: struct {
+			Models []string `yaml:"models"`
+		}{
+			Models: []string{
+				"anthropic.claude-3-5-sonnet-20241022-v2:0",
+				"anthropic.claude-3-sonnet-20240229-v1:0",
+				"anthropic.claude-3-haiku-20240307-v1:0",
+				"amazon.nova-pro-v1:0",
+				"amazon.nova-lite-v1:0",
+				"amazon.nova-micro-v1:0",
+			},
+		},
+		CloudWatch: struct {
+			Namespace string `yaml:"namespace"`
+			Enabled   bool   `yaml:"enabled"`
+		}{
+			Namespace: "GenKit/{{.ProjectName}}",
+			Enabled:   true,
+		},
+	}
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
