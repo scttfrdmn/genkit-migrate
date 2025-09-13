@@ -60,7 +60,7 @@ func (g *Generator) writeNewFiles(migration *models.Migration) error {
 			return fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(fullPath, []byte(content), 0600); err != nil {
 			return fmt.Errorf("failed to write file %s: %w", fullPath, err)
 		}
 	}
@@ -96,7 +96,7 @@ func (g *Generator) generateDocumentation(migration *models.Migration) error {
 	readmeContent := g.generateReadme(migration)
 	readmePath := filepath.Join(g.config.OutputPath, "MIGRATION.md")
 
-	if err := os.WriteFile(readmePath, []byte(readmeContent), 0644); err != nil {
+	if err := os.WriteFile(readmePath, []byte(readmeContent), 0600); err != nil {
 		return fmt.Errorf("failed to write MIGRATION.md: %w", err)
 	}
 
